@@ -355,3 +355,6 @@ class COCOTrainval35kDataset(COCODataset):
             num_shards = 2
         tfrecord_path = [os.path.join(tfrecord_path, '{}-{:05d}-of-{:05d}'.format(base_name, idx, num_shards)) for idx in range(num_shards)]
         super().__init__(tfrecord_path, **kwargs)
+
+    def __len__(self):
+        return 35500 if self.split == 'train' else 5000
