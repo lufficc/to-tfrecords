@@ -31,6 +31,8 @@ from tqdm import tqdm
 import dataset_util
 
 flags = tf.app.flags
+tf.flags.DEFINE_boolean('mini', False,
+                        'Create coco trainval35k or not')
 tf.flags.DEFINE_boolean('include_masks', False,
                         'Whether to include instance segmentations masks '
                         '(PNG encoded) in the result. default: False.')
@@ -259,6 +261,9 @@ def _create_tf_record_from_coco_annotations(
 
 
 def main(_):
+    if FLAGS.mini:
+        create_coco_trainval35k()
+        quit()
     assert FLAGS.train_image_dir, '`train_image_dir` missing.'
     assert FLAGS.val_image_dir, '`val_image_dir` missing.'
     assert FLAGS.test_image_dir, '`test_image_dir` missing.'
@@ -291,6 +296,31 @@ def main(_):
         testdev_output_path,
         FLAGS.include_masks,
         num_shards=15)
+
+
+def create_coco_trainval35k():
+    assert FLAGS.val_image_dir, '`val_image_dir` missing.'
+    assert FLAGS.train_annotations_file, '`train_annotations_file` missing.'
+    assert FLAGS.val_annotations_file, '`val_annotations_file` missing.'
+
+    if not tf.gfile.IsDirectory(FLAGS.output_dir):
+        tf.gfile.MakeDirs(FLAGS.output_dir)
+    train_output_path = os.path.join(FLAGS.output_dir, 'coco_trainval35k.tfrecord')
+    val_output_path = os.path.join(FLAGS.output_dir, 'coco_minival.tfrecord')
+
+    print('Include mask: {}'.format(FLAGS.include_masks))
+    _create_tf_record_from_coco_annotations(
+        FLAGS.train_annotations_file,
+        FLAGS.val_image_dir,
+        train_output_path,
+        FLAGS.include_masks,
+        num_shards=5)
+    _create_tf_record_from_coco_annotations(
+        FLAGS.val_annotations_file,
+        FLAGS.val_image_dir,
+        val_output_path,
+        FLAGS.include_masks,
+        num_shards=2)
 
 
 if __name__ == '__main__':

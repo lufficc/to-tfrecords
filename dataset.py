@@ -245,27 +245,16 @@ class COCODataset(BaseDataset):
         'image/object/is_crowd': tf.VarLenFeature(tf.int64),
     }
 
-    def __init__(self, tfrecord_path, split, use_mask=False, use_crowd=True):
+    def __init__(self, tfrecord_path, use_mask=False, use_crowd=True):
         """
         Args:
             use_mask: bool, if not true, mask will not return
             use_crowd: bool, if not true, crowd will not return
         """
-        self.split = split
         self.use_mask = use_mask
         self.use_crowd = use_crowd
         if use_mask:
             self.FEATURES['image/object/mask'] = tf.VarLenFeature(tf.string)
-
-        assert split in ['train', 'val', 'testdev'], split + ' is not support.'
-        base_name = 'coco_{}.tfrecord'.format(split)
-        if split == 'train':
-            num_shards = 20
-        elif split == 'val':
-            num_shards = 10
-        elif split == 'testdev':
-            num_shards = 15
-        tfrecord_path = [os.path.join(tfrecord_path, '{}-{:05d}-of-{:05d}'.format(base_name, idx, num_shards)) for idx in range(num_shards)]
         super().__init__(tfrecord_path)
 
     @property
@@ -337,3 +326,32 @@ class COCODataset(BaseDataset):
         else:
             results = filename, image, height, width, bboxes, labels
         return results
+
+
+class FullCOCODataset(COCODataset):
+    def __init__(self, tfrecord_path, split, **kwargs):
+        self.split = split
+        assert split in ['train', 'val', 'testdev'], split + ' is not support.'
+        base_name = 'coco_{}.tfrecord'.format(split)
+        if split == 'train':
+            num_shards = 20
+        elif split == 'val':
+            num_shards = 10
+        elif split == 'testdev':
+            num_shards = 15
+        tfrecord_path = [os.path.join(tfrecord_path, '{}-{:05d}-of-{:05d}'.format(base_name, idx, num_shards)) for idx in range(num_shards)]
+        super().__init__(tfrecord_path, **kwargs)
+
+
+class COCOTrainval35kDataset(COCODataset):
+    def __init__(self, tfrecord_path, split, **kwargs):
+        self.split = split
+        assert split in ['train', 'val'], split + ' is not support.'
+        if split == 'train':
+            num_shards = 5
+            base_name = 'coco_trainval35k.tfrecord'
+        else:
+            base_name = 'coco_minival.tfrecord'
+            num_shards = 2
+        tfrecord_path = [os.path.join(tfrecord_path, '{}-{:05d}-of-{:05d}'.format(base_name, idx, num_shards)) for idx in range(num_shards)]
+        super().__init__(tfrecord_path, **kwargs)
