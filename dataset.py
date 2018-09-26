@@ -259,13 +259,7 @@ class COCODataset(BaseDataset):
 
     @property
     def num_classes(self):
-        return ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign',
-                'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
-                'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove',
-                'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-                'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed',
-                'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink',
-                'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+        return len(COCO_CLASS_NAMES)
 
     @property
     def class_names_map(self):
@@ -295,6 +289,7 @@ class COCODataset(BaseDataset):
         crowd = _sparse_to_tensor(examples['image/object/is_crowd'], tf.int32)
         label_names = tf.sparse_tensor_to_dense(examples['image/object/class/text'], default_value='')
         labels = tf.map_fn(lambda name: tf.where(tf.equal(COCO_CLASS_NAMES, name))[0][0], label_names, dtype=tf.int64)
+        labels = tf.to_float(labels)
 
         if not self.use_crowd:
             crowd_mask = tf.cast(tf.subtract(1, crowd), tf.bool)
