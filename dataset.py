@@ -282,6 +282,7 @@ class COCODataset(BaseDataset):
         image = tf.cast(image_raw, tf.float32)
 
         filename = tf.cast(examples['image/filename'], tf.string)
+        image_id = tf.string_to_number(examples['image/source_id'], tf.int32)
         height = tf.cast(examples['image/height'], tf.int32)
         width = tf.cast(examples['image/width'], tf.int32)
         image_shape = tf.stack([height, width, 3])
@@ -322,9 +323,9 @@ class COCODataset(BaseDataset):
                             lambda: tf.map_fn(decode_png_mask, png_masks, dtype=tf.float32),
                             lambda: tf.zeros(tf.to_int32(tf.stack([0, height, width]))))
 
-            results = filename, image, masks, height, width, bboxes, labels
+            results = image_id, filename, image, height, width, masks, bboxes, labels
         else:
-            results = filename, image, height, width, bboxes, labels
+            results = image_id, filename, image, height, width, bboxes, labels
         return results
 
 
