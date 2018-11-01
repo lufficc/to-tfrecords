@@ -33,7 +33,7 @@ import dataset_util
 flags = tf.app.flags
 tf.flags.DEFINE_boolean('mini', False,
                         'Create coco trainval35k or not')
-tf.flags.DEFINE_boolean('include_masks', False,
+tf.flags.DEFINE_boolean('include_masks', True,
                         'Whether to include instance segmentations masks '
                         '(PNG encoded) in the result. default: False.')
 tf.flags.DEFINE_string('train_image_dir', '',
@@ -66,7 +66,7 @@ def open_sharded_output_tfrecords(exit_stack, base_path, num_shards):
       The list of opened TFRecords. Position k in the list corresponds to shard k.
     """
     tf_record_output_filenames = [
-        '{}-{:05d}-of-{:05d}'.format(base_path, idx, num_shards)
+        '{}-{:05d}-of-{:05d}'.format(base_path, idx + 1, num_shards)
         for idx in range(num_shards)
     ]
 
@@ -273,9 +273,9 @@ def main(_):
 
     if not tf.gfile.IsDirectory(FLAGS.output_dir):
         tf.gfile.MakeDirs(FLAGS.output_dir)
-    train_output_path = os.path.join(FLAGS.output_dir, 'coco_train.tfrecord')
-    val_output_path = os.path.join(FLAGS.output_dir, 'coco_val.tfrecord')
-    testdev_output_path = os.path.join(FLAGS.output_dir, 'coco_testdev.tfrecord')
+    train_output_path = os.path.join(FLAGS.output_dir, 'coco_2014_train.tfrecord')
+    val_output_path = os.path.join(FLAGS.output_dir, 'coco_2014_val.tfrecord')
+    testdev_output_path = os.path.join(FLAGS.output_dir, 'coco_2014_testdev.tfrecord')
 
     print('Include mask: {}'.format(FLAGS.include_masks))
     _create_tf_record_from_coco_annotations(
@@ -283,19 +283,19 @@ def main(_):
         FLAGS.train_image_dir,
         train_output_path,
         FLAGS.include_masks,
-        num_shards=20)
+        num_shards=10)
     _create_tf_record_from_coco_annotations(
         FLAGS.val_annotations_file,
         FLAGS.val_image_dir,
         val_output_path,
         FLAGS.include_masks,
-        num_shards=10)
+        num_shards=5)
     _create_tf_record_from_coco_annotations(
         FLAGS.testdev_annotations_file,
         FLAGS.test_image_dir,
         testdev_output_path,
         FLAGS.include_masks,
-        num_shards=15)
+        num_shards=5)
 
 
 def create_coco_trainval35k():
@@ -305,8 +305,8 @@ def create_coco_trainval35k():
 
     if not tf.gfile.IsDirectory(FLAGS.output_dir):
         tf.gfile.MakeDirs(FLAGS.output_dir)
-    train_output_path = os.path.join(FLAGS.output_dir, 'coco_trainval35k.tfrecord')
-    val_output_path = os.path.join(FLAGS.output_dir, 'coco_minival.tfrecord')
+    train_output_path = os.path.join(FLAGS.output_dir, 'coco_2014_valminusminival.tfrecord')  # coco_trainval35k
+    val_output_path = os.path.join(FLAGS.output_dir, 'coco_2014_minival.tfrecord')
 
     print('Include mask: {}'.format(FLAGS.include_masks))
     _create_tf_record_from_coco_annotations(
@@ -320,7 +320,7 @@ def create_coco_trainval35k():
         FLAGS.val_image_dir,
         val_output_path,
         FLAGS.include_masks,
-        num_shards=2)
+        num_shards=1)
 
 
 if __name__ == '__main__':
